@@ -6,11 +6,11 @@ This is a simple SparkplugB network example using C#/.NETv8 and [SparkplugNet](h
 
 ## How to run the example
 
- - 1. Open `SparkplugDemo.sln` with Visual Studio 2022
- - 2. Set `SimulationHost` as startup application
- - 3. Get the connection details to your MQTT broker
- - 4. Modifiy the PrimaryApp/Config.cs (broker host/port)
- - 5. Modifiy the EdgeNode/Config.cs (broker host/port)
+1. Open `SparkplugDemo.sln` with Visual Studio 2022
+2. Set `SimulationHost` as startup application
+3. Get the connection details to your MQTT broker
+4. Modifiy the PrimaryApp/Config.cs (broker host/port)
+5. Modifiy the EdgeNode/Config.cs (broker host/port)
 
 ## Links
 
