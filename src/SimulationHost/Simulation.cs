@@ -18,9 +18,9 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
     {
         // Sparkplug App
         _app = new(loggerFactory.CreateLogger<SparkplugApp>());
-        _app.OnSignalStateReceivedDelegate += newSignalState =>
+        _app.OnSignalStateReceivedDelegate += (newSignalState, groupId, nodeId) =>
         {
-            logger.LogInformation("==NDATA=> Received " + newSignalState);
+            logger.LogInformation($"<<<=== App received {groupId}/NDATA/{nodeId}: " + newSignalState);
         };
         await _app.StartAsync(new PrimaryApp.Config());
 
@@ -29,7 +29,7 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         _node1 = new(loggerFactory.CreateLogger<SpBNode>());
         _node1.SignalCommandReceived += async newSignalCommand =>
         {
-            logger.LogInformation("==NCMD==> DemoNode1 received " + newSignalCommand);
+            logger.LogInformation($"<<<=== {_node1.GroupId}/NCMD/{_node1.NodeId} received: " + newSignalCommand);
 
             await Publish(_node1, SignalStateType.Green, 10);
             await Task.Delay(2000);
@@ -42,7 +42,7 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         _node2 = new(loggerFactory.CreateLogger<SpBNode>());
         _node2.SignalCommandReceived += async newSignalCommand =>
         {
-            logger.LogInformation("==NCMD==> DemoNode2 received " + newSignalCommand);
+            logger.LogInformation($"<<<=== {_node2.GroupId}/NCMD/{_node2.NodeId} received: " + newSignalCommand);
 
             await Publish(_node2, SignalStateType.Yellow, 5);
         };
@@ -51,13 +51,13 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
 
         // Start simulation
         await Task.Delay(2000);
-        await Command(SignalModeType.Operation, 2, UnitType.Minutes, "DemoNode1");
+        await Command(SignalModeType.Operation, 2, UnitType.Minutes, _node1);
 
         await Task.Delay(2000);
-        await Command(SignalModeType.Blinking, 8, UnitType.Minutes, "DemoNode2");
+        await Command(SignalModeType.Blinking, 8, UnitType.Minutes, _node2);
     }
 
-    private async Task Command(SignalModeType mode, int cyclePeriod, UnitType unit, string nodeName)
+    private async Task Command(SignalModeType mode, int cyclePeriod, UnitType unit, SpBNode node)
     {
         SignalCommand command = new()
         {
@@ -68,9 +68,9 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         
         Metric metric = AppMetricsHelpers.From(command);
         List<Metric> metrics = new() { metric };
-        await _app.PublishNodeCommand(metrics, "DemoGroup", nodeName);
+        await _app.PublishNodeCommand(metrics, node.GroupId, node.NodeId);
 
-        logger.LogInformation("Sending " + command.ToString());
+        logger.LogInformation($"===>>> App sending command to {node.GroupId}/{node.NodeId}: " + command.ToString());
     }
 
     private async Task Publish(SpBNode node, SignalStateType signalState, int vehicleCount)
@@ -85,7 +85,7 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         List<Metric> metrics = new() { metric };
         await node.Publish(metrics);
 
-        logger.LogInformation("Publishing " + signal.ToString());
+        logger.LogInformation($"===>>> {node.GroupId}/NDATA/{node.NodeId} publishing: " + signal.ToString());
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)

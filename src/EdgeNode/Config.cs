@@ -13,7 +13,7 @@ public class Config
     public string? Password { get; set; }
     public string? HostIdentifierId { get; set; } = "PrimaryDemoAppHostId";
     public string? MqttClientId { get; set; } = Guid.NewGuid().ToString();
-    public string? GroupId { get; set; } = "DemoGroup";
-    public string? NodeId { get; set; }
+    public string GroupId { get; set; } = "DemoGroup";
+    public string NodeId { get; set; }
     public string? DeviceId { get; set; } = null;
 }

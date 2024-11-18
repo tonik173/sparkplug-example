@@ -9,7 +9,7 @@ using SpCommon;
 
 namespace PrimaryApp;
 
-public delegate void SignalStateReceivedDelegate(SignalState newSignal);
+public delegate void SignalStateReceivedDelegate(SignalState newSignal, string groupId, string nodeId);
 
 public class SparkplugApp(ILogger<SparkplugApp> logger)
 {
@@ -143,7 +143,7 @@ public class SparkplugApp(ILogger<SparkplugApp> logger)
         if (OnSignalStateReceivedDelegate != null)
         {
             SignalState signalState = NodeMetricsHelpers.From(args.Metrics);
-            OnSignalStateReceivedDelegate(signalState);
+            OnSignalStateReceivedDelegate(signalState, args.GroupIdentifier, args.EdgeNodeIdentifier);
         }
         return Task.CompletedTask;
     }

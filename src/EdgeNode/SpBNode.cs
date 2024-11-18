@@ -15,8 +15,8 @@ public delegate void SignalCommandReceivedDelegate(SignalCommand newCommand);
 public class SpBNode(ILogger<SpBNode> logger)
 {
     private SparkplugNode _node = null!;
-    private string GroupId { get; set; } = "aGroup";
-    private string NodeId { get; set; } = "aNode";
+    public string GroupId { get; private set; } = "aGroup";
+    public string NodeId { get; private set; } = "aNode";
 
     public event SignalCommandReceivedDelegate? SignalCommandReceived;
 
@@ -48,6 +48,9 @@ public class SpBNode(ILogger<SpBNode> logger)
             config.GroupId,
             config.NodeId,
             CancellationToken.None);
+
+        GroupId = config.GroupId;
+        NodeId = config.NodeId;
 
         IEnumerable<Metric> metrics = CreateAnnounceMetrics();
         _node = new(metrics, SparkplugSpecificationVersion.Version30);
