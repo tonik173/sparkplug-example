@@ -1,0 +1,4 @@
+services:
+  sparkplug-example-sim:
+    build: .
+    container_name: sparkplug-example-sim
