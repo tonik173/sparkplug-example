@@ -7,7 +7,7 @@ services:
       - "1883:1883"    # MQTT port
       - "9001:9001"    # WebSocket port (optional)
     volumes:
-      - ./mosquitto:/mosquitto/config       # Mount custom config if needed
+      - ./mosquitto:/mosquitto/config 
     environment:
       - MOSQUITTO_USER=${MQTT_USER}
       - MOSQUITTO_PASSWORD=${MQTT_PASSWORD}
