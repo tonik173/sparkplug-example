@@ -53,7 +53,7 @@ public class SpBNode(ILogger<SpBNode> logger)
         NodeId = config.NodeId;
 
         IEnumerable<Metric> metrics = CreateAnnounceMetrics();
-        _node = new(metrics, SparkplugSpecificationVersion.Version30);
+        _node = new(metrics, SparkplugSpecificationVersion.Version22);
 
         _node.Connected += OnNodeConnected;
         _node.Disconnected += OnNodeDisconnected;
@@ -68,6 +68,7 @@ public class SpBNode(ILogger<SpBNode> logger)
         _node.StatusMessageReceived += OnNodeStatusMessageReceived;
 
         await _node.Start(nodeOptions);
+
         logger.LogInformation("Sparkplug node has been started...");
     }
 

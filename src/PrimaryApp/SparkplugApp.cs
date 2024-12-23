@@ -45,7 +45,7 @@ public class SparkplugApp(ILogger<SparkplugApp> logger)
             CancellationToken.None);
 
         IEnumerable<Metric> metrics = CreateAnnounceMetrics();
-        _application = new(metrics, SparkplugSpecificationVersion.Version30);
+        _application = new(metrics, SparkplugSpecificationVersion.Version22);
 
         // Handles the application's connected and disconnected events.
         _application.Connected += OnApplicationConnected;
