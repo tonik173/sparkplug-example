@@ -37,7 +37,7 @@ public class SparkplugApp(ILogger<SparkplugApp> logger)
             config.User,
             config.Password,
             config.HostIdentifierId,
-            TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(10),
             SparkplugMqttProtocolVersion.V311,
             null,
         null,

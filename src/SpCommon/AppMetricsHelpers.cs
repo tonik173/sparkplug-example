@@ -5,22 +5,22 @@ namespace SpCommon;
 
 public class AppMetricsHelpers
 {
-    const string _metricName = "trafficControl/" + nameof(SignalCommand);
+    const string _metricName = "trafficControl/" + nameof(SignalModeCommand);
 
-    public static Metric From(SignalCommand signalCommand)
+    public static Metric From(SignalModeCommand signalCommand)
     {
         Metric signalModeMetric = new Metric(DataType.Int8, signalCommand.SignalMode);
-        signalModeMetric.Name = nameof(SignalCommand.SignalMode);
+        signalModeMetric.Name = nameof(SignalModeCommand.SignalMode);
 
         Metric cyclePeriodMetric = new Metric(DataType.Int16, signalCommand.CyclePeriod);
-        cyclePeriodMetric.Name = nameof(SignalCommand.CyclePeriod);
+        cyclePeriodMetric.Name = nameof(SignalModeCommand.CyclePeriod);
 
         Metric unitMetric = new Metric(DataType.Int8, signalCommand.Unit);
-        unitMetric.Name = nameof(SignalCommand.Unit);
+        unitMetric.Name = nameof(SignalModeCommand.Unit);
 
         Template template = new();
         template.IsDefinition = false;
-        template.TemplateRef = nameof(SignalCommand);
+        template.TemplateRef = nameof(SignalModeCommand);
         template.Metrics = [signalModeMetric, cyclePeriodMetric, unitMetric];
 
         Metric templateMetric = new(DataType.Template, template);
@@ -29,9 +29,9 @@ public class AppMetricsHelpers
         return templateMetric;
     }
 
-    public static SignalCommand From(IEnumerable<Metric> metrics)
+    public static SignalModeCommand From(IEnumerable<Metric> metrics)
     {
-        SignalCommand signalCommand = new();
+        SignalModeCommand signalCommand = new();
         foreach (Metric metric in metrics)
         {
             if (!_metricName.Equals(metric.Name)) break;
@@ -41,31 +41,31 @@ public class AppMetricsHelpers
 
             foreach (Metric contentMetric in template.Metrics)
             {
-                if (contentMetric.Name.Equals(nameof(SignalCommand.SignalMode)))
+                if (contentMetric.Name.Equals(nameof(SignalModeCommand.SignalMode)))
                     signalCommand.SignalMode = Enum.Parse<SignalModeType>(contentMetric.Value.ToString());
 
-                if (contentMetric.Name.Equals(nameof(SignalCommand.Unit)))
+                if (contentMetric.Name.Equals(nameof(SignalModeCommand.Unit)))
                     signalCommand.Unit = Enum.Parse<UnitType>(contentMetric.Value.ToString());
 
-                if (contentMetric.Name.Equals(nameof(SignalCommand.CyclePeriod)))
+                if (contentMetric.Name.Equals(nameof(SignalModeCommand.CyclePeriod)))
                     signalCommand.CyclePeriod = int.Parse(contentMetric.Value.ToString());
             }
         }
         return signalCommand;
     }
 
-    // Definition of a template to transport the user data type <SignalCommand>.
+    // Definition of a template to transport the user data type <SignalModeCommand>.
     public static Metric CreateSignalCommandTemplate()
     {
         Metric signalModeMetric = new Metric(DataType.Int8, SignalModeType.Off);
-        signalModeMetric.Name = nameof(SignalCommand.SignalMode);
+        signalModeMetric.Name = nameof(SignalModeCommand.SignalMode);
         signalModeMetric.Properties = Common.GetPropertySet<SignalModeType>();
 
         Metric cyclePeriodMetric = new Metric(DataType.Int16, 30);
-        cyclePeriodMetric.Name = nameof(SignalCommand.CyclePeriod);
+        cyclePeriodMetric.Name = nameof(SignalModeCommand.CyclePeriod);
 
         Metric unitMetric = new Metric(DataType.Int8, UnitType.Seconds);
-        unitMetric.Name = nameof(SignalCommand.Unit);
+        unitMetric.Name = nameof(SignalModeCommand.Unit);
         unitMetric.Properties = Common.GetPropertySet<UnitType>();
 
         Template template = new();

@@ -13,7 +13,7 @@ public enum UnitType
     Minutes = 1,
 }
 
-public class SignalCommand
+public class SignalModeCommand
 {
     public SignalModeType SignalMode { get; set; } = SignalModeType.Off;
 

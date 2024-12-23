@@ -4,7 +4,8 @@ public enum SignalStateType
 {
     Green = 0,
     Yellow = 1,
-    Red = 2
+    Red = 2,
+    Off = 3
 }
 
 public class SignalState
@@ -17,6 +18,9 @@ public class SignalState
         string vehiclesInfo;
         switch (LightState)
         {
+            case SignalStateType.Off:
+                vehiclesInfo = $"Signal counter is off";
+                break;
             case SignalStateType.Green:
                 vehiclesInfo = $"{VehicleCount} cars waiting";
                 break;

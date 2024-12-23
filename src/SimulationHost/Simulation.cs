@@ -14,6 +14,8 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
     private SpBNode _node1;
     private SpBNode _node2;
 
+    private readonly Random _random = new();
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         // Sparkplug App
@@ -27,39 +29,67 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
 
         // Sparkplug Node 1
         _node1 = new(loggerFactory.CreateLogger<SpBNode>());
-        _node1.SignalCommandReceived += async newSignalCommand =>
+        _node1.SignalModeCommandReceived += async newSignalCommand =>
         {
-            logger.LogInformation($"<<<=== {_node1.GroupId}/NCMD/{_node1.NodeId} received: " + newSignalCommand);
-
-            await Publish(_node1, SignalStateType.Green, 10);
-            await Task.Delay(2000);
-            await Publish(_node1, SignalStateType.Yellow, 2);
+            await ProcessSignalModeCommand(_node1, newSignalCommand);
         };
-        _node1.StartAsync(new EdgeNode.Config("DemoNode1"));
+        await _node1.StartAsync(new EdgeNode.Config("DemoNode1")).ConfigureAwait(false);
 
 
         // Sparkplug Node 2
         _node2 = new(loggerFactory.CreateLogger<SpBNode>());
-        _node2.SignalCommandReceived += async newSignalCommand =>
+        _node2.SignalModeCommandReceived += async newSignalCommand =>
         {
-            logger.LogInformation($"<<<=== {_node2.GroupId}/NCMD/{_node2.NodeId} received: " + newSignalCommand);
-
-            await Publish(_node2, SignalStateType.Yellow, 5);
+            await ProcessSignalModeCommand(_node2, newSignalCommand);
         };
-        _node2.StartAsync(new EdgeNode.Config("DemoNode2"));
-
+        await _node2.StartAsync(new EdgeNode.Config("DemoNode2")).ConfigureAwait(false);
 
         // Start simulation
-        await Task.Delay(2000);
-        await Command(SignalModeType.Operation, 2, UnitType.Minutes, _node1);
+        int count = 0;
+        while (true)
+        {
+            logger.LogInformation($"******************************** Simulation {++count} ********************************");
 
-        await Task.Delay(2000);
-        await Command(SignalModeType.Blinking, 8, UnitType.Minutes, _node2);
+            try {
+                await Task.Delay(5000);
+                await Command(SignalModeType.Blinking, 2, UnitType.Seconds, _node1);
+                await Command(SignalModeType.Blinking, 2, UnitType.Seconds, _node2);
+
+                await Task.Delay(5000);
+                await Command(SignalModeType.Operation, 5, UnitType.Seconds, _node1);
+                await Command(SignalModeType.Operation, 5, UnitType.Seconds, _node2);
+
+                await Task.Delay(5000);
+                await Command(SignalModeType.Off, 0, UnitType.Seconds, _node1);
+                await Command(SignalModeType.Off, 0, UnitType.Seconds, _node2);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in simulation");
+            }
+        }
+    }
+
+    private async Task ProcessSignalModeCommand(SpBNode node, SignalModeCommand newSignalCommand)
+    {
+        logger.LogInformation($"<<<=== {node.GroupId}/NCMD/{node.NodeId} received: " + newSignalCommand);
+        switch (newSignalCommand.SignalMode)
+        {
+            case SignalModeType.Operation:
+                await Publish(node, SignalStateType.Red, _random.Next(0, 10));
+                break;
+            case SignalModeType.Blinking:
+                await Publish(node, SignalStateType.Yellow, _random.Next(0, 10));
+                break;
+            case SignalModeType.Off:
+                await Publish(node, SignalStateType.Off, _random.Next(0, 10));
+                break;
+        }
     }
 
     private async Task Command(SignalModeType mode, int cyclePeriod, UnitType unit, SpBNode node)
     {
-        SignalCommand command = new()
+        SignalModeCommand command = new()
         {
             SignalMode = mode,
             CyclePeriod = cyclePeriod,
@@ -90,8 +120,8 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _node1.StopAsync();
-        _node2.StopAsync();
-        _app.StopAsync();
+        await _node1.StopAsync();
+        await _node2.StopAsync();
+        await _app.StopAsync();
     }
 }

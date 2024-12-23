@@ -10,7 +10,7 @@ using SpCommon;
 
 namespace EdgeNode;
 
-public delegate void SignalCommandReceivedDelegate(SignalCommand newCommand);
+public delegate void SignalModeCommandReceivedDelegate(SignalModeCommand newCommand);
 
 public class SpBNode(ILogger<SpBNode> logger)
 {
@@ -18,7 +18,7 @@ public class SpBNode(ILogger<SpBNode> logger)
     public string GroupId { get; private set; } = "aGroup";
     public string NodeId { get; private set; } = "aNode";
 
-    public event SignalCommandReceivedDelegate? SignalCommandReceived;
+    public event SignalModeCommandReceivedDelegate? SignalModeCommandReceived;
 
     public async Task StartAsync(Config config)
     {
@@ -41,7 +41,7 @@ public class SpBNode(ILogger<SpBNode> logger)
             config.User,
             config.Password,
             config.HostIdentifierId,
-            TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(10),
             SparkplugMqttProtocolVersion.V311,
             null,
             null,
@@ -134,10 +134,10 @@ public class SpBNode(ILogger<SpBNode> logger)
     private Task OnNodeNodeCommandReceived(SparkplugNode.NodeCommandEventArgs args)
     {
         logger.LogDebug($"SP.NodeCommandEventArgs");
-        if (SignalCommandReceived  != null)
+        if (SignalModeCommandReceived  != null)
         {
-            SignalCommand command = AppMetricsHelpers.From(args.Metrics);
-            SignalCommandReceived(command);
+            SignalModeCommand command = AppMetricsHelpers.From(args.Metrics);
+            SignalModeCommandReceived(command);
         }
 
         return Task.CompletedTask;
