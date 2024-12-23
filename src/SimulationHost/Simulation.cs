@@ -16,7 +16,7 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
 
     private readonly Random _random = new();
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    private async Task StartSparkplugNetworkSimulation()
     {
         // Sparkplug App
         _app = new(loggerFactory.CreateLogger<SparkplugApp>());
@@ -44,11 +44,12 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         };
         await _node2.StartAsync(new EdgeNode.Config("DemoNode2")).ConfigureAwait(false);
 
+
         // Start simulation
         int count = 0;
         while (true)
         {
-            logger.LogInformation($"******************************** Simulation {++count} ********************************");
+            logger.LogInformation($"******************************** Network simulation {++count} ********************************");
 
             try {
                 await Task.Delay(5000);
@@ -70,6 +71,22 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         }
     }
 
+    private async Task Command(SignalModeType mode, int cyclePeriod, UnitType unit, SpBNode node)
+    {
+        SignalModeCommand command = new()
+        {
+            SignalMode = mode,
+            CyclePeriod = cyclePeriod,
+            Unit = unit
+        };
+        
+        Metric metric = AppMetricsHelpers.From(command);
+        List<Metric> metrics = new() { metric };
+        await _app.PublishNodeCommand(metrics, node.GroupId, node.NodeId);
+
+        logger.LogInformation($"===>>> App sending command to {node.GroupId}/{node.NodeId}: " + command.ToString());
+    }
+
     private async Task ProcessSignalModeCommand(SpBNode node, SignalModeCommand newSignalCommand)
     {
         logger.LogInformation($"<<<=== {node.GroupId}/NCMD/{node.NodeId} received: " + newSignalCommand);
@@ -87,20 +104,54 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         }
     }
 
-    private async Task Command(SignalModeType mode, int cyclePeriod, UnitType unit, SpBNode node)
+    private async Task StartSparkplugEdgeNodesSimulation()
     {
-        SignalModeCommand command = new()
+        // Sparkplug Node 1
+        _node1 = new(loggerFactory.CreateLogger<SpBNode>());
+        _node1.SignalModeCommandReceived += async newSignalCommand =>
         {
-            SignalMode = mode,
-            CyclePeriod = cyclePeriod,
-            Unit = unit
+            await ProcessSignalModeCommand(_node1, newSignalCommand);
         };
-        
-        Metric metric = AppMetricsHelpers.From(command);
-        List<Metric> metrics = new() { metric };
-        await _app.PublishNodeCommand(metrics, node.GroupId, node.NodeId);
+        await _node1.StartAsync(new EdgeNode.Config("DemoNode1")).ConfigureAwait(false);
 
-        logger.LogInformation($"===>>> App sending command to {node.GroupId}/{node.NodeId}: " + command.ToString());
+
+        // Sparkplug Node 2
+        _node2 = new(loggerFactory.CreateLogger<SpBNode>());
+        _node2.SignalModeCommandReceived += async newSignalCommand =>
+        {
+            await ProcessSignalModeCommand(_node2, newSignalCommand);
+        };
+        await _node2.StartAsync(new EdgeNode.Config("DemoNode2")).ConfigureAwait(false);
+
+
+        // Publish signal state
+        int count = 0;
+        while (true)
+        {
+            logger.LogInformation($"******************************** Edge node simulation {++count} ********************************");
+
+            try {
+                await Task.Delay(1000);
+                await Publish(_node1, SignalStateType.Green, _random.Next(0, 10));
+                await Publish(_node2, SignalStateType.Red, _random.Next(0, 10));
+
+                await Task.Delay(5000);
+                await Publish(_node1, SignalStateType.Yellow, _random.Next(0, 2));
+                await Publish(_node2, SignalStateType.Yellow, _random.Next(0, 2));
+
+                await Task.Delay(1000);
+                await Publish(_node1, SignalStateType.Red, _random.Next(0, 10));
+                await Publish(_node2, SignalStateType.Green, _random.Next(0, 10));
+
+                await Task.Delay(5000);
+                await Publish(_node1, SignalStateType.Yellow, _random.Next(0, 2));
+                await Publish(_node2, SignalStateType.Yellow, _random.Next(0, 2));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in simulation");
+            }
+        }
     }
 
     private async Task Publish(SpBNode node, SignalStateType signalState, int vehicleCount)
@@ -116,6 +167,16 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         await node.Publish(metrics);
 
         logger.LogInformation($"===>>> {node.GroupId}/NDATA/{node.NodeId} publishing: " + signal.ToString());
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        string simulationMode = Environment.GetEnvironmentVariable("SIMULATION_MODE") ?? string.Empty;
+        logger.LogInformation($"Simulation mode: {simulationMode}");
+        if (simulationMode == "edgeNodesOnly")
+            await StartSparkplugEdgeNodesSimulation();
+        else
+            await StartSparkplugNetworkSimulation();
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
