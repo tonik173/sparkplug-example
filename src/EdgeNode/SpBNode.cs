@@ -22,7 +22,7 @@ public class SpBNode(ILogger<SpBNode> logger)
 
     public async Task StartAsync(Config config)
     {
-        logger.LogInformation("Starting SpBNode");
+        logger.LogInformation($"Starting SpBNode with config.HostIdentifierId: {config.HostIdentifierId}");
         await Initialize(config);
     }
 
