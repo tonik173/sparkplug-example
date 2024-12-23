@@ -1,4 +1,24 @@
 services:
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    ports:
+      - "1883:1883"    # MQTT port
+      - "9001:9001"    # WebSocket port (optional)
+    volumes:
+      - ./mosquitto:/mosquitto/config       # Mount custom config if needed
+    environment:
+      - MOSQUITTO_USER=${MQTT_USER}
+      - MOSQUITTO_PASSWORD=${MQTT_PASSWORD}
+    restart: always
+
   sparkplug-example-sim:
     build: .
     container_name: sparkplug-example-sim
+    environment: 
+      - MQTT_BROKER_URL=${MQTT_BROKER_URL}
+      - MQTT_BROKER_PORT=${MQTT_BROKER_PORT}
+      - MQTT_USER=${MQTT_USER}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+    command: /bin/sh -c "sleep 5 && dotnet SimulationHost.dll"

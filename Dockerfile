@@ -15,5 +15,5 @@ RUN dotnet publish -c Release -o out
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build-env /app/src/SimulationHost/out /app
-ENTRYPOINT ["dotnet", "SimulationHost.dll"]
+#ENTRYPOINT ["dotnet", "SimulationHost.dll"]
 CMD ["arg0", "arg1", "arg2", "arg3", "arg4", "arg5"]
