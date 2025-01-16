@@ -21,5 +21,8 @@ services:
       - MQTT_BROKER_PORT=${MQTT_BROKER_PORT}
       - MQTT_USER=${MQTT_USER}
       - MQTT_PASSWORD=${MQTT_PASSWORD}
+      - MQTT_CLIENT_ID=${MQTT_CLIENT_ID}
+      - SP_GROUP_ID=${SP_GROUP_ID}
+      - SP_NODE_ID=${SP_NODE_ID}
       - SIMULATION_MODE=${SIMULATION_MODE}
     command: /bin/sh -c "sleep 5 && dotnet SimulationHost.dll"

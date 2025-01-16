@@ -20,9 +20,14 @@ public class Config
             ? Password = password
             : Password = "1234.abcd";
     
-        _ = Environment.GetEnvironmentVariable("IGN_SP_PRIMARY_HOST_ID") is string hostIdentifierId && !string.IsNullOrWhiteSpace(hostIdentifierId)
+        _ = Environment.GetEnvironmentVariable("MQTT_CLIENT_ID") is string mqttClientId && !string.IsNullOrWhiteSpace(mqttClientId)
+            ? MqttClientId = "primary-app." + mqttClientId
+            : MqttClientId = "primary-app." + Guid.NewGuid().ToString();
+
+        _ = Environment.GetEnvironmentVariable("SP_PRIMARY_HOST_ID") is string hostIdentifierId && !string.IsNullOrWhiteSpace(hostIdentifierId)
             ? HostIdentifierId = hostIdentifierId
             : HostIdentifierId = "PrimaryDemoAppHostId";
+
     }
 
     public string BrokerUrl { get; set; }
@@ -30,5 +35,5 @@ public class Config
     public string? User { get; set; }
     public string? Password { get; set; }
     public string? HostIdentifierId { get; set; }
-    public string? MqttClientId { get; set; } = "PrimaryDemoAppMqttId";
+    public string? MqttClientId { get; set; }
 }

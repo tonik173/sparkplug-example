@@ -171,11 +171,11 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        // string simulationMode = Environment.GetEnvironmentVariable("SIMULATION_MODE") ?? string.Empty;
-        // logger.LogInformation($"Simulation mode: {simulationMode}");
-        // if (simulationMode == "edgeNodesOnly")
-        //     await StartSparkplugEdgeNodesSimulation();
-        // else
+        string simulationMode = Environment.GetEnvironmentVariable("SIMULATION_MODE") ?? string.Empty;
+        logger.LogInformation($"Simulation mode: {simulationMode}");
+        if (simulationMode == "edgeNodesOnly")
+            await StartSparkplugEdgeNodesSimulation();
+        else
             await StartSparkplugNetworkSimulation();
     }
 
