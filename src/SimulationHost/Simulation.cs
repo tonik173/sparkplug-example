@@ -10,9 +10,9 @@ namespace SimulationHost;
 
 public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory) : IHostedService
 {
-    private SparkplugApp _app;
-    private SpBNode _node1;
-    private SpBNode _node2;
+    private SparkplugApp _app = null!;
+    private SpBNode _node1 = null!;
+    private SpBNode _node2 = null!;
 
     private readonly Random _random = new();
 
@@ -131,7 +131,7 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
 
         // Publish signal state
         int count = 0;
-        while (true)
+        while (count < 1000)
         {
             logger.LogInformation($"******************************** Edge node simulation {++count} ********************************");
 
@@ -176,7 +176,7 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        string simulationMode = Environment.GetEnvironmentVariable("SIMULATION_MODE") ?? string.Empty;
+        string simulationMode = "edgeNodesOnly"; //Environment.GetEnvironmentVariable("SIMULATION_MODE") ?? string.Empty;
         logger.LogInformation($"Simulation mode: {simulationMode}");
         if (simulationMode == "edgeNodesOnly")
             await StartSparkplugEdgeNodesSimulation();

@@ -10,11 +10,15 @@ public class NodeMetricsHelpers
     // Transforms a SignalState object to a Sparkplug Metric
     public static Metric From(SignalState signalState)
     {
+        ulong timestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
         Metric lightStateMetric = new Metric(DataType.Int8, signalState.LightState);
         lightStateMetric.Name = nameof(SignalState.LightState);
+        lightStateMetric.Timestamp = timestamp;
 
         Metric vehicleCountMetric = new Metric(DataType.Int16, signalState.VehicleCount);
         vehicleCountMetric.Name = nameof(SignalState.VehicleCount);
+        vehicleCountMetric.Timestamp = timestamp;
 
         Template template = new();
         template.IsDefinition = false;

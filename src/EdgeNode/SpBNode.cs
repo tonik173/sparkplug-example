@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Linq;
 using MQTTnet.Client;
 using SparkplugNet.Core;
 using SparkplugNet.Core.Enumerations;
@@ -93,9 +94,11 @@ public class SpBNode(ILogger<SpBNode> logger)
 
         Metric signalCommandTemplateMetric = AppMetricsHelpers.CreateSignalCommandTemplate();
         Metric signalStateTemplateMetric = NodeMetricsHelpers.CreateSignalStateTemplate();
+        Metric signalStateMetric = NodeMetricsHelpers.From(new SignalState());
 
         metrics = metrics.Append(signalCommandTemplateMetric)
-                         .Append(signalStateTemplateMetric);
+                         .Append(signalStateTemplateMetric)
+                         .Append(signalStateMetric);
 
         return metrics;
     }
@@ -134,13 +137,15 @@ public class SpBNode(ILogger<SpBNode> logger)
 
     private Task OnNodeNodeCommandReceived(SparkplugNode.NodeCommandEventArgs args)
     {
-        logger.LogDebug($"SP.NodeCommandEventArgs");
-        if (SignalModeCommandReceived != null)
+        if (args.Metrics.Any()) 
         {
-            SignalModeCommand command = AppMetricsHelpers.From(args.Metrics);
-            SignalModeCommandReceived(command);
+            logger.LogDebug($"SP.NodeCommandEventArgs");
+            if (SignalModeCommandReceived != null)
+            {
+                SignalModeCommand command = AppMetricsHelpers.From(args.Metrics);
+                SignalModeCommandReceived(command);
+            }
         }
-
         return Task.CompletedTask;
     }
     private Task OnNodeStatusMessageReceived(SparkplugNode.StatusMessageEventArgs args)

@@ -9,14 +9,19 @@ public class AppMetricsHelpers
 
     public static Metric From(SignalModeCommand signalCommand)
     {
+        ulong timestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
         Metric signalModeMetric = new Metric(DataType.Int8, signalCommand.SignalMode);
         signalModeMetric.Name = nameof(SignalModeCommand.SignalMode);
+        signalModeMetric.Timestamp = timestamp;
 
         Metric cyclePeriodMetric = new Metric(DataType.Int16, signalCommand.CyclePeriod);
         cyclePeriodMetric.Name = nameof(SignalModeCommand.CyclePeriod);
+        cyclePeriodMetric.Timestamp = timestamp;
 
         Metric unitMetric = new Metric(DataType.Int8, signalCommand.Unit);
         unitMetric.Name = nameof(SignalModeCommand.Unit);
+        unitMetric.Timestamp = timestamp;
 
         Template template = new();
         template.IsDefinition = false;
