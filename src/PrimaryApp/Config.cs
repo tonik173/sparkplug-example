@@ -26,7 +26,7 @@ public class Config
 
         _ = Environment.GetEnvironmentVariable("SP_PRIMARY_HOST_ID") is string hostIdentifierId && !string.IsNullOrWhiteSpace(hostIdentifierId)
             ? HostIdentifierId = hostIdentifierId
-            : HostIdentifierId = "PrimaryDemoAppHostId";
+            : HostIdentifierId = "DemoAppHostId";
 
     }
 

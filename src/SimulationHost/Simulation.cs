@@ -1,4 +1,5 @@
-﻿using Domain;
+﻿using System.Collections.Concurrent;
+using Domain;
 using EdgeNode;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,7 +15,19 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
     private SpBNode _node1 = null!;
     private SpBNode _node2 = null!;
 
+    private ConcurrentQueue<CommandContainer> _commandContainer = new();
+
     private readonly Random _random = new();
+
+    private async void SignalModeCommandReceivedForNode1(SignalModeCommand newCommand)
+    {
+        await ProcessSignalModeCommand(_node1, newCommand);
+    }
+
+    private async void SignalModeCommandReceivedForNode2(SignalModeCommand newCommand)
+    {
+        await ProcessSignalModeCommand(_node1, newCommand);
+    }
 
     private async Task StartSparkplugNetworkSimulation()
     {
@@ -29,25 +42,39 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
 
         // Sparkplug Node 1
         _node1 = new(loggerFactory.CreateLogger<SpBNode>());
-        _node1.SignalModeCommandReceived += async newSignalCommand =>
+        _node1.SignalModeCommandReceived += command =>
         {
-            await ProcessSignalModeCommand(_node1, newSignalCommand);
+            _commandContainer.Enqueue(new CommandContainer { Command = command, Node = _node1 });
         };
-        await _node1.StartAsync(new EdgeNode.Config("DemoNode1")).ConfigureAwait(false);
+        await _node1.StartAsync(new EdgeNode.Config(GetNodeId(1)));
 
 
         // Sparkplug Node 2
         _node2 = new(loggerFactory.CreateLogger<SpBNode>());
-        _node2.SignalModeCommandReceived += async newSignalCommand =>
+        _node2.SignalModeCommandReceived += command =>
         {
-            await ProcessSignalModeCommand(_node2, newSignalCommand);
+            _commandContainer.Enqueue(new CommandContainer { Command = command, Node = _node2 });
         };
-        await _node2.StartAsync(new EdgeNode.Config("DemoNode2")).ConfigureAwait(false);
+        await _node2.StartAsync(new EdgeNode.Config(GetNodeId(1)));
+
+
+        // Process signal mode commands
+        _ = Task.Run(async () =>
+        {
+            while (true)
+            {
+                if (_commandContainer.TryDequeue(out CommandContainer? commandContainer))
+                {
+                    await ProcessSignalModeCommand(commandContainer.Node, commandContainer.Command);
+                }
+                await Task.Delay(500);
+            }
+        }).ConfigureAwait(false);
 
 
         // Start simulation
         int count = 0;
-        while (true)
+        while (count < 1000)
         {
             logger.LogInformation($"******************************** Network simulation {++count} ********************************");
 
@@ -104,30 +131,36 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         }
     }
 
-    private string GetNodeId(int num)
-    {
-        string? nodeId = Environment.GetEnvironmentVariable($"SP_NODE_ID{num}");
-        return string.IsNullOrEmpty(nodeId) ? $"DemoNode{num}" : nodeId;
-    }
-
     private async Task StartSparkplugEdgeNodesSimulation()
     {
         // Sparkplug Node 1
         _node1 = new(loggerFactory.CreateLogger<SpBNode>());
-        _node1.SignalModeCommandReceived += async newSignalCommand =>
+        _node1.SignalModeCommandReceived += command =>
         {
-            await ProcessSignalModeCommand(_node1, newSignalCommand);
+            _commandContainer.Enqueue(new CommandContainer { Command = command, Node = _node1 });
         };
-        await _node1.StartAsync(new EdgeNode.Config(GetNodeId(1))).ConfigureAwait(false);
+        await _node1.StartAsync(new EdgeNode.Config(GetNodeId(1)));
 
         // Sparkplug Node 2
         _node2 = new(loggerFactory.CreateLogger<SpBNode>());
-        _node2.SignalModeCommandReceived += async newSignalCommand =>
+        _node2.SignalModeCommandReceived += command =>
         {
-            await ProcessSignalModeCommand(_node2, newSignalCommand);
+            _commandContainer.Enqueue(new CommandContainer { Command = command, Node = _node2 });
         };
-        await _node2.StartAsync(new EdgeNode.Config(GetNodeId(2))).ConfigureAwait(false);
+        await _node2.StartAsync(new EdgeNode.Config(GetNodeId(2)));
 
+        // Process signal mode commands
+        _ = Task.Run(async () =>
+        {
+            while (true)
+            {
+                if (_commandContainer.TryDequeue(out CommandContainer? commandContainer))
+                {
+                    await ProcessSignalModeCommand(commandContainer.Node, commandContainer.Command);
+                }
+                await Task.Delay(500);
+            }
+        }).ConfigureAwait(false);
 
         // Publish signal state
         int count = 0;
@@ -176,7 +209,7 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        string simulationMode = "edgeNodesOnly"; //Environment.GetEnvironmentVariable("SIMULATION_MODE") ?? string.Empty;
+        string simulationMode = Environment.GetEnvironmentVariable("SIMULATION_MODE") ?? string.Empty;
         logger.LogInformation($"Simulation mode: {simulationMode}");
         if (simulationMode == "edgeNodesOnly")
             await StartSparkplugEdgeNodesSimulation();
@@ -189,5 +222,17 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         await _node1.StopAsync();
         await _node2.StopAsync();
         await _app.StopAsync();
+    }
+
+    private string GetNodeId(int num)
+    {
+        string? nodeId = Environment.GetEnvironmentVariable($"SP_NODE_ID{num}");
+        return string.IsNullOrEmpty(nodeId) ? $"DemoNode{num}" : nodeId;
+    }
+
+    private record CommandContainer
+    {
+        internal SignalModeCommand Command { get; set; }
+        internal SpBNode Node { get; set; }
     }
 }

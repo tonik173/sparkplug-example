@@ -9,7 +9,7 @@ public class AppMetricsHelpers
 
     public static Metric From(SignalModeCommand signalCommand)
     {
-        ulong timestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        ulong timestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         Metric signalModeMetric = new Metric(DataType.Int8, signalCommand.SignalMode);
         signalModeMetric.Name = nameof(SignalModeCommand.SignalMode);
@@ -62,16 +62,21 @@ public class AppMetricsHelpers
     // Definition of a template to transport the user data type <SignalModeCommand>.
     public static Metric CreateSignalCommandTemplate()
     {
+        ulong timestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
         Metric signalModeMetric = new Metric(DataType.Int8, SignalModeType.Off);
         signalModeMetric.Name = nameof(SignalModeCommand.SignalMode);
         signalModeMetric.Properties = Common.GetPropertySet<SignalModeType>();
+        signalModeMetric.Timestamp = timestamp;
 
         Metric cyclePeriodMetric = new Metric(DataType.Int16, 30);
         cyclePeriodMetric.Name = nameof(SignalModeCommand.CyclePeriod);
-
+        cyclePeriodMetric.Timestamp = timestamp;
+        
         Metric unitMetric = new Metric(DataType.Int8, UnitType.Seconds);
         unitMetric.Name = nameof(SignalModeCommand.Unit);
         unitMetric.Properties = Common.GetPropertySet<UnitType>();
+        unitMetric.Timestamp = timestamp;
 
         Template template = new();
         template.IsDefinition = true;
