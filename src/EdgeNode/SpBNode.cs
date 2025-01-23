@@ -135,7 +135,7 @@ public class SpBNode(ILogger<SpBNode> logger)
     private Task OnNodeNodeCommandReceived(SparkplugNode.NodeCommandEventArgs args)
     {
         logger.LogDebug($"SP.NodeCommandEventArgs");
-        if (SignalModeCommandReceived  != null)
+        if (SignalModeCommandReceived != null)
         {
             SignalModeCommand command = AppMetricsHelpers.From(args.Metrics);
             SignalModeCommandReceived(command);

@@ -104,6 +104,12 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         }
     }
 
+    private string GetNodeId(int num)
+    {
+        string? nodeId = Environment.GetEnvironmentVariable($"SP_NODE_ID{num}");
+        return string.IsNullOrEmpty(nodeId) ? $"DemoNode{num}" : nodeId;
+    }
+
     private async Task StartSparkplugEdgeNodesSimulation()
     {
         // Sparkplug Node 1
@@ -112,8 +118,7 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         {
             await ProcessSignalModeCommand(_node1, newSignalCommand);
         };
-        await _node1.StartAsync(new EdgeNode.Config("DemoNode1")).ConfigureAwait(false);
-
+        await _node1.StartAsync(new EdgeNode.Config(GetNodeId(1))).ConfigureAwait(false);
 
         // Sparkplug Node 2
         _node2 = new(loggerFactory.CreateLogger<SpBNode>());
@@ -121,7 +126,7 @@ public class Simulation(ILogger<Simulation> logger, ILoggerFactory loggerFactory
         {
             await ProcessSignalModeCommand(_node2, newSignalCommand);
         };
-        await _node2.StartAsync(new EdgeNode.Config("DemoNode2")).ConfigureAwait(false);
+        await _node2.StartAsync(new EdgeNode.Config(GetNodeId(2))).ConfigureAwait(false);
 
 
         // Publish signal state

@@ -2,7 +2,7 @@
 
 public class Config
 {
-    public Config(string nodeId)
+    public Config(string nodeId, string deviceId = null)
     {
         _ = Environment.GetEnvironmentVariable("MQTT_BROKER_URL") is string brokerUrl && !string.IsNullOrWhiteSpace(brokerUrl)
             ? BrokerUrl = brokerUrl
@@ -32,9 +32,8 @@ public class Config
             ? GroupId = groupId
             : GroupId = "DemoGroup";
 
-        _ = Environment.GetEnvironmentVariable("SP_NODE_ID") is string envNodeId && !string.IsNullOrWhiteSpace(envNodeId)
-            ? NodeId = envNodeId
-            : NodeId = nodeId;
+        NodeId = nodeId;
+        DeviceId = deviceId;
     }
 
     public string BrokerUrl { get; set; }
@@ -45,5 +44,5 @@ public class Config
     public string? MqttClientId { get; set; }
     public string GroupId { get; set; }
     public string NodeId { get; set; }
-    public string? DeviceId { get; set; } = null;
+    public string? DeviceId { get; set; }
 }
